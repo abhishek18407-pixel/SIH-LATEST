@@ -1,0 +1,9 @@
+{
+  "name": "@sih/database",
+  "version": "1.0.0",
+  "private": true,
+  "main": "schema.sql",
+  "scripts": {
+    "db:push": "echo 'Run schema.sql directly in Supabase SQL Editor or via Supabase CLI'"
+  }
+}
