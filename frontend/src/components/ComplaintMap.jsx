@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -124,7 +124,7 @@ export default function ComplaintMap({ complaints = [], onSelectComplaint }) {
   }, [complaints]);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "380px", borderRadius: "16px", overflow: "hidden", border: "1px solid var(--line)" }}>
+    <div style={{ position: "relative", width: "100%", height: "clamp(260px, 45vh, 420px)", borderRadius: "16px", overflow: "hidden", border: "1px solid var(--line)" }}>
       <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
       {complaints.filter(c => c.location_lat && c.location_lng).length === 0 && (
         <div style={{

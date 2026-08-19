@@ -376,20 +376,17 @@ export default function DeptDashboard() {
         <div
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: "100vw",
-            maxWidth: "none",
-            height: "100vh",
+            inset: 0,
+            width: "100%",
+            height: "100%",
             background: "rgba(10, 10, 10, 0.8)",
             backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             zIndex: 99999,
-            padding: "20px",
+            padding: "clamp(10px, 3vw, 24px)",
             boxSizing: "border-box",
           }}
           onClick={() => setSelectedComplaint(null)}
@@ -399,14 +396,14 @@ export default function DeptDashboard() {
             style={{
               width: "100%",
               maxWidth: "760px",
-              maxHeight: "88vh",
+              maxHeight: "90vh",
               overflowY: "auto",
               margin: "0 auto",
-              padding: "28px clamp(20px, 3vw, 36px)",
+              padding: "clamp(18px, 4vw, 32px)",
               background: "#333331",
               border: "1px solid var(--sage-strong)",
               boxShadow: "0 24px 60px rgba(0,0,0,0.7)",
-              borderRadius: "20px",
+              borderRadius: "clamp(16px, 3vw, 24px)",
               boxSizing: "border-box",
             }}
             onClick={(e) => e.stopPropagation()}
