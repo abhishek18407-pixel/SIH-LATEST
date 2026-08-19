@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
+import { LANGUAGES } from "../data/mockData.js";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
@@ -22,7 +23,7 @@ const LOCALE_MAP = {
 
 export default function ReportIssue() {
   const navigate = useNavigate();
-  const { setComplaintDraft, speakKey, language } = useApp();
+  const { setComplaintDraft, speakKey, language, setLanguage } = useApp();
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [text, setText] = useState("");
@@ -32,96 +33,180 @@ export default function ReportIssue() {
   const [location, setLocation] = useState(null);
   const [speechStatus, setSpeechStatus] = useState("");
 
+  const isRecordingRef = useRef(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recognitionRef = useRef(null);
+  const finalTextRef = useRef("");
+
+  // Determine current active language code
+  const currentLangCode = language?.code || "hi";
+  const currentLangObj = LANGUAGES.find((l) => l.code === currentLangCode) || LANGUAGES[1];
+
+  useEffect(() => {
+    finalTextRef.current = text;
+  }, [text]);
 
   useEffect(() => {
     return () => {
-      // Clean up recognition on unmount
+      isRecordingRef.current = false;
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
+        } catch {}
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        try {
+          mediaRecorderRef.current.stop();
         } catch {}
       }
     };
   }, []);
 
-  async function toggleRecording() {
-    if (recording) {
-      // Stop speech recognition
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch {}
-      }
-      // Stop media recorder
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-        mediaRecorderRef.current.stop();
-      }
-      setRecording(false);
-      setSpeechStatus("✓ Voice converted to text");
-      return;
-    }
+  async function startRecording() {
+    isRecordingRef.current = true;
+    setRecording(true);
+    setSpeechStatus(`🎙️ Listening in ${currentLangObj.native} (${currentLangObj.label})... speak now`);
+    finalTextRef.current = text ? text.trim() + " " : "";
 
+    // 1. Start MediaRecorder (Audio capture for Whisper AI fallback)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
+
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
-      mediaRecorder.onstop = () => {
+
+      mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop());
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setAudioBlob(blob);
-      };
-      mediaRecorder.start();
 
-      // Native Browser Web Speech API
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRecognition) {
+        // If browser Speech Recognition didn't produce text, transcribe with Whisper backend
+        if (!finalTextRef.current.trim() && blob.size > 1000) {
+          setSpeechStatus("🤖 Transcribing audio via AI Whisper...");
+          try {
+            const formData = new FormData();
+            formData.append("file", blob, "speech.webm");
+            formData.append("language", currentLangCode);
+
+            const transcribeEndpoint = BACKEND_URL ? `${BACKEND_URL}/transcribe` : "/api/transcribe";
+            const res = await fetch(transcribeEndpoint, {
+              method: "POST",
+              body: formData,
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              const transcribed = data.text || data.original_text || data.english_text;
+              if (transcribed) {
+                setText(transcribed);
+                finalTextRef.current = transcribed;
+                setSpeechStatus("✓ Voice converted to text via AI Whisper");
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn("Server transcribe fallback note:", e);
+          }
+          setSpeechStatus("✓ Voice recording saved");
+        }
+      };
+
+      mediaRecorder.start();
+    } catch (err) {
+      console.warn("Microphone stream error:", err);
+      alert("Please allow microphone permissions in your browser to speak your complaint.");
+      isRecordingRef.current = false;
+      setRecording(false);
+      return;
+    }
+
+    // 2. Native Web Speech API (Real-time live speech-to-text)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      try {
         const recognition = new SpeechRecognition();
         recognitionRef.current = recognition;
-        const locale = LOCALE_MAP[language?.code] || "hi-IN";
+        const locale = LOCALE_MAP[currentLangCode] || "hi-IN";
         recognition.lang = locale;
         recognition.continuous = true;
         recognition.interimResults = true;
-
-        let initialText = text ? text + " " : "";
+        recognition.maxAlternatives = 1;
 
         recognition.onresult = (event) => {
-          let currentTranscript = "";
-          for (let i = 0; i < event.results.length; i++) {
-            currentTranscript += event.results[i][0].transcript;
+          let interim = "";
+          let final = "";
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              final += event.results[i][0].transcript;
+            } else {
+              interim += event.results[i][0].transcript;
+            }
           }
-          setText(initialText + currentTranscript);
+
+          if (final) {
+            finalTextRef.current = (finalTextRef.current + " " + final).trim();
+          }
+
+          const currentCombined = (finalTextRef.current + (interim ? " " + interim : "")).trim();
+          if (currentCombined) {
+            setText(currentCombined);
+            setSpeechStatus(`🎙️ Listening in ${currentLangObj.native}...`);
+          }
         };
 
         recognition.onerror = (event) => {
-          console.warn("Browser Speech Recognition event:", event.error);
+          console.warn("Web Speech Recognition event:", event.error);
+          if (event.error === "not-allowed") {
+            setSpeechStatus("⚠️ Microphone permission required");
+          }
         };
 
         recognition.onend = () => {
-          if (recording) {
+          // Restart if user is still in recording mode
+          if (isRecordingRef.current) {
             try {
               recognition.start();
             } catch {}
           }
         };
 
-        try {
-          recognition.start();
-        } catch (e) {
-          console.warn("Speech recognition start note:", e);
-        }
+        recognition.start();
+      } catch (e) {
+        console.warn("Speech recognition initialization note:", e);
       }
+    }
+  }
 
-      setRecording(true);
-      setSpeechStatus(`Listening in ${language?.native || language?.label || "your language"}... speak now`);
-    } catch (err) {
-      alert("Could not access microphone. Please allow microphone permissions in your browser.");
+  function stopRecording() {
+    isRecordingRef.current = false;
+    setRecording(false);
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+    }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch {}
+    }
+
+    setSpeechStatus(text.trim() ? "✓ Voice converted to text" : "✓ Audio captured");
+  }
+
+  function toggleRecording() {
+    if (recording) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   }
 
@@ -160,24 +245,27 @@ export default function ReportIssue() {
         try {
           const analyzeForm = new FormData();
           analyzeForm.append("text", finalTranscript);
+          analyzeForm.append("language", currentLangCode);
+
           const analyzeEndpoint = BACKEND_URL ? `${BACKEND_URL}/analyze` : "/api/analyze";
           const res = await fetch(analyzeEndpoint, {
             method: "POST",
             body: analyzeForm,
           });
+
           if (res.ok) {
             const data = await res.json();
-            aiResult = {
-              issue: data.summary || finalTranscript,
-              department: data.department || "Roads & Infrastructure (PWD)",
-              severity: data.severity || "Medium",
-              confidence: 0.95,
-              unclassified: false,
-            };
+            if (data.summary && data.department && data.department !== "General Administration") {
+              aiResult = {
+                issue: data.summary,
+                department: data.department,
+                severity: data.severity || "Medium",
+                confidence: 0.95,
+                unclassified: false,
+              };
+            }
           }
-        } catch {
-          // Backend offline - use local AI rules
-        }
+        } catch {}
       }
 
       if (!finalTranscript) {
@@ -186,6 +274,7 @@ export default function ReportIssue() {
           : "Issue reported by citizen";
       }
 
+      // 2. Multilingual smart analyzer fallback (translates to English & auto-routes)
       if (!aiResult) {
         const { mockAIAnalyze } = await import("../data/mockData.js");
         aiResult = await mockAIAnalyze(finalTranscript);
@@ -216,24 +305,59 @@ export default function ReportIssue() {
         <span style={{ fontSize: 20, cursor: "pointer" }} onClick={() => speakKey("report_title")}>🔊</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div className="subtitle">Tap mic to speak voice complaint, or type below</div>
+        <div className="subtitle">Tap mic to speak in your language, or type below</div>
         <span style={{ fontSize: 18, cursor: "pointer", marginBottom: 20 }} onClick={() => speakKey("report_subtitle")}>🔊</span>
       </div>
 
-      <button className={`mic-btn ${recording ? "recording" : ""}`} onClick={toggleRecording} disabled={processing}>
-        🎤
+      {/* Quick Language Selector */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, overflowX: "auto", paddingBottom: 4 }}>
+        <span style={{ fontSize: 13, color: "#666", whiteSpace: "nowrap" }}>Speaking in:</span>
+        <select
+          value={currentLangCode}
+          onChange={(e) => {
+            const selected = LANGUAGES.find((l) => l.code === e.target.value);
+            if (selected) setLanguage(selected);
+          }}
+          style={{
+            padding: "6px 12px",
+            borderRadius: 8,
+            border: "1px solid #ccc",
+            fontSize: 13,
+            fontWeight: "600",
+            background: "#fff",
+            cursor: "pointer"
+          }}
+        >
+          {LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.native} ({l.label})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Pulsing Mic Button */}
+      <button
+        type="button"
+        className={`mic-btn ${recording ? "recording" : ""}`}
+        onClick={toggleRecording}
+        disabled={processing}
+        aria-label="Toggle voice recording"
+      >
+        {recording ? "⏹️" : "🎤"}
       </button>
-      <div style={{ textAlign: "center", fontSize: 13, color: "#888", marginBottom: 8 }}>
+
+      <div style={{ textAlign: "center", fontSize: 13, color: recording ? "#d93025" : "#666", fontWeight: recording ? "600" : "400", marginBottom: 12 }}>
         {recording
-          ? speechStatus || "Listening... speak now"
+          ? speechStatus || "🎙️ Recording... speak clearly into microphone"
           : processing
-          ? "🤖 Generating AI summary & routing..."
-          : speechStatus || (text ? "✓ Text ready" : "Tap mic to speak in your language")}
+          ? "🤖 Generating English AI summary & auto-routing..."
+          : speechStatus || (text ? "✓ Text ready" : `Tap mic to speak in ${currentLangObj.native}`)}
       </div>
 
       <textarea
         rows={4}
-        placeholder="Your speech will appear here automatically, or you can type here..."
+        placeholder={`Your speech in ${currentLangObj.native} (${currentLangObj.label}) will appear here automatically, or type here...`}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
@@ -254,7 +378,7 @@ export default function ReportIssue() {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSubmit} disabled={processing}>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSubmit} disabled={processing || recording}>
           {processing ? "⌛ Processing AI Summary..." : "Continue →"}
         </button>
         <span style={{ fontSize: 20, cursor: "pointer" }} onClick={() => speakKey("continue")}>🔊</span>
