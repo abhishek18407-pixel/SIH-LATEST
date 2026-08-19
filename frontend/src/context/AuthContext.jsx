@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 const AuthContext = createContext(null);
@@ -9,13 +9,12 @@ export function AuthProvider({ children }) {
   const [role, setRole]       = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch profile row from whichever table matches the role
-  const fetchProfile = useCallback(async (authUser) => {
-    if (!authUser) {
-      setProfile(null);
-      setRole(null);
-      return null;
-    }
+  // Ref to prevent onAuthStateChange from triggering premature state updates/redirects during strict login checks
+  const isLoggingInRef = useRef(false);
+
+  // Pure helper: Resolve profile and role without mutating context state
+  const resolveProfileAndRole = useCallback(async (authUser) => {
+    if (!authUser) return null;
 
     const metaRole = authUser.user_metadata?.role;
 
@@ -35,9 +34,6 @@ export function AuthProvider({ children }) {
           role: "department",
         };
 
-        setProfile(deptProfile);
-        setRole("department");
-        try { localStorage.setItem("civic_role", "department"); } catch {}
         return { profile: deptProfile, role: "department" };
       } catch {
         const fallbackProfile = {
@@ -46,9 +42,6 @@ export function AuthProvider({ children }) {
           dept_code: authUser.user_metadata?.dept_code || "OFFICIAL",
           role: "department",
         };
-        setProfile(fallbackProfile);
-        setRole("department");
-        try { localStorage.setItem("civic_role", "department"); } catch {}
         return { profile: fallbackProfile, role: "department" };
       }
     }
@@ -69,9 +62,6 @@ export function AuthProvider({ children }) {
           role: "user",
         };
 
-        setProfile(userProfile);
-        setRole("user");
-        try { localStorage.setItem("civic_role", "user"); } catch {}
         return { profile: userProfile, role: "user" };
       } catch {
         const fallbackProfile = {
@@ -80,9 +70,6 @@ export function AuthProvider({ children }) {
           phone: authUser.user_metadata?.phone || null,
           role: "user",
         };
-        setProfile(fallbackProfile);
-        setRole("user");
-        try { localStorage.setItem("civic_role", "user"); } catch {}
         return { profile: fallbackProfile, role: "user" };
       }
     }
@@ -95,9 +82,6 @@ export function AuthProvider({ children }) {
         .eq("id", authUser.id)
         .maybeSingle();
       if (dp) {
-        setProfile(dp);
-        setRole("department");
-        try { localStorage.setItem("civic_role", "department"); } catch {}
         return { profile: dp, role: "department" };
       }
     } catch {}
@@ -109,27 +93,46 @@ export function AuthProvider({ children }) {
         .eq("id", authUser.id)
         .maybeSingle();
       if (up) {
-        setProfile(up);
-        setRole("user");
-        try { localStorage.setItem("civic_role", "user"); } catch {}
         return { profile: up, role: "user" };
       }
     } catch {}
 
     const defaultRole = metaRole || "user";
-    setProfile(authUser.user_metadata || null);
-    setRole(defaultRole);
-    try { localStorage.setItem("civic_role", defaultRole); } catch {}
     return { profile: authUser.user_metadata || null, role: defaultRole };
   }, []);
+
+  // Fetch profile and update context state
+  const fetchProfile = useCallback(async (authUser) => {
+    if (!authUser) {
+      setProfile(null);
+      setRole(null);
+      try { localStorage.removeItem("civic_role"); } catch {}
+      return null;
+    }
+
+    const res = await resolveProfileAndRole(authUser);
+    if (res) {
+      setProfile(res.profile);
+      setRole(res.role);
+      try { localStorage.setItem("civic_role", res.role); } catch {}
+    }
+    return res;
+  }, [resolveProfileAndRole]);
 
   // Restore session on mount
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const authUser = session?.user ?? null;
-      setUser(authUser);
       if (authUser) {
-        await fetchProfile(authUser);
+        const res = await resolveProfileAndRole(authUser);
+        if (res) {
+          setUser(authUser);
+          setProfile(res.profile);
+          setRole(res.role);
+          try { localStorage.setItem("civic_role", res.role); } catch {}
+        } else {
+          setUser(authUser);
+        }
       } else {
         setUser(null);
         setProfile(null);
@@ -141,6 +144,9 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // If login() is actively verifying expected role, don't interfere
+        if (isLoggingInRef.current) return;
+
         if (event === "SIGNED_OUT" || !session) {
           setUser(null);
           setProfile(null);
@@ -149,17 +155,24 @@ export function AuthProvider({ children }) {
           setLoading(false);
           return;
         }
+
         const authUser = session?.user ?? null;
-        setUser(authUser);
-        await fetchProfile(authUser);
+        if (authUser) {
+          const res = await resolveProfileAndRole(authUser);
+          setUser(authUser);
+          if (res) {
+            setProfile(res.profile);
+            setRole(res.role);
+            try { localStorage.setItem("civic_role", res.role); } catch {}
+          }
+        }
         setLoading(false);
       }
     );
     return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  }, [resolveProfileAndRole]);
 
   // ── Sign Up ───────────────────────────────────────────────────────────────
-  // Returns the generated recovery code so SignUp.jsx can display it
   const signUp = useCallback(async (formData, selectedRole) => {
     const { email, password, ...rest } = formData;
 
@@ -169,7 +182,6 @@ export function AuthProvider({ children }) {
       CHARS[Math.floor(Math.random() * CHARS.length)]
     ).join("");
 
-    // Create auth user with metadata (Supabase bcrypt-hashes the password automatically)
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -186,7 +198,6 @@ export function AuthProvider({ children }) {
     });
     if (error) throw error;
 
-    // If Supabase returns empty identities, this email is already registered
     if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
       throw new Error("An account with this email already exists. Please sign in instead.");
     }
@@ -194,7 +205,6 @@ export function AuthProvider({ children }) {
     const uid = data.user?.id;
     if (!uid) throw new Error("Sign-up failed — no user ID returned.");
 
-    // Insert profile row with recovery code (or upsert if trigger already created it)
     if (selectedRole === "user") {
       const { error: profileError } = await supabase
         .from("user_profiles")
@@ -219,41 +229,59 @@ export function AuthProvider({ children }) {
       if (profileError) throw profileError;
     }
 
-    // Return the recovery code so it can be shown to the user
     return { data, recoveryCode };
   }, []);
 
-  // ── Login ─────────────────────────────────────────────────────────────────
+  // ── Login with Strict Role Enforcement ────────────────────────────────────
   const login = useCallback(async (email, password, expectedRole) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    isLoggingInRef.current = true;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
 
-    const authUser = data.user;
-    const res = await fetchProfile(authUser);
-    const actualRole = res?.role;
+      const authUser = data.user;
+      const res = await resolveProfileAndRole(authUser);
+      const actualRole = res?.role || authUser?.user_metadata?.role || "user";
 
-    // Strict role check: enforce tab matching
-    if (expectedRole && actualRole && actualRole !== expectedRole) {
-      await supabase.auth.signOut();
-      setUser(null); setProfile(null); setRole(null);
-      if (expectedRole === "department") {
-        throw new Error("This account is registered as a Citizen. Please switch to the Citizen tab.");
-      } else {
-        throw new Error("This account is registered as a Department. Please switch to the Department tab.");
+      // Strict role check: enforce tab matching
+      if (expectedRole && actualRole !== expectedRole) {
+        // Force sign out immediately to prevent session persistence
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        setRole(null);
+        try { localStorage.removeItem("civic_role"); } catch {}
+
+        if (expectedRole === "department") {
+          throw new Error("Access Denied: This account is registered as a Citizen. Please switch to the Citizen tab to sign in.");
+        } else {
+          throw new Error("Access Denied: This account is registered as a Department Official. Please switch to the Department tab to sign in.");
+        }
       }
-    }
 
-    setUser(authUser);
-    return actualRole;
-  }, [fetchProfile]);
+      // Valid role - apply state
+      setUser(authUser);
+      if (res) {
+        setProfile(res.profile);
+        setRole(res.role);
+        try { localStorage.setItem("civic_role", res.role); } catch {}
+      }
+      return actualRole;
+    } finally {
+      isLoggingInRef.current = false;
+    }
+  }, [resolveProfileAndRole]);
 
   // ── Logout ────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
-    setUser(null); setProfile(null); setRole(null);
+    setUser(null);
+    setProfile(null);
+    setRole(null);
+    try { localStorage.removeItem("civic_role"); } catch {}
   }, []);
 
-  // ── Reset Password using Recovery Code (calls Supabase RPC) ─────────────
+  // ── Reset Password using Recovery Code ───────────────────────────────────
   const resetPasswordWithCode = useCallback(async (email, recoveryCode, newPassword) => {
     const { data, error } = await supabase.rpc("reset_password_with_recovery_code", {
       user_email:    email,
@@ -270,6 +298,7 @@ export function AuthProvider({ children }) {
       user, profile, role, loading,
       signUp, login, logout,
       resetPasswordWithCode,
+      fetchProfile,
     }}>
       {children}
     </AuthContext.Provider>

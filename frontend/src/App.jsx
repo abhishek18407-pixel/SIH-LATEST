@@ -23,14 +23,14 @@ export default function App() {
       <div className="app-shell">
         <div key={location.pathname} className="page-shell">
           <Routes location={location}>
-            {/* Public routes */}
+            {/* Public auth routes */}
             <Route path="/"                element={<Login />} />
             <Route path="/login"           element={<Login />} />
-            <Route path="/home"            element={<Welcome />} />
             <Route path="/signup"          element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
             {/* Citizen-only protected routes */}
+            <Route path="/home"       element={<ProtectedRoute allowedRole="user"><Welcome /></ProtectedRoute>} />
             <Route path="/language"   element={<ProtectedRoute allowedRole="user"><LanguageSelect /></ProtectedRoute>} />
             <Route path="/report"     element={<ProtectedRoute allowedRole="user"><ReportIssue /></ProtectedRoute>} />
             <Route path="/review"     element={<ProtectedRoute allowedRole="user"><AIReview /></ProtectedRoute>} />

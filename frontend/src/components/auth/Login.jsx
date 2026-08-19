@@ -15,16 +15,16 @@ export default function Login() {
   // Success message passed from SignUp or ForgotPassword via router state
   const successMsg = location.state?.message || "";
 
-  // If already logged in, redirect to appropriate portal
+  // If already logged in on page load, redirect to appropriate portal
   useEffect(() => {
-    if (!loading && user && role) {
+    if (!loading && user && role && !busy) {
       if (role === "department") {
         navigate("/dept-dashboard", { replace: true });
       } else if (role === "user") {
         navigate("/home", { replace: true });
       }
     }
-  }, [user, role, loading, navigate]);
+  }, [user, role, loading, busy, navigate]);
 
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -32,13 +32,16 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!form.email || !form.password) { setError("Please fill in all fields."); return; }
+    if (!form.email || !form.password) {
+      setError("Please fill in all fields.");
+      return;
+    }
     setBusy(true);
     try {
       const loggedInRole = await login(form.email, form.password, activeTab);
       if (loggedInRole === "department") {
         navigate("/dept-dashboard", { replace: true });
-      } else {
+      } else if (loggedInRole === "user") {
         navigate("/home", { replace: true });
       }
     } catch (err) {
@@ -60,14 +63,18 @@ export default function Login() {
         {successMsg && <p className="auth-success" style={{ marginBottom: 20 }}>{successMsg}</p>}
 
         <div className="auth-tabs">
-          <button type="button"
+          <button
+            type="button"
             className={activeTab === "user" ? "auth-tab auth-tab-active" : "auth-tab"}
-            onClick={() => { setActiveTab("user"); setError(""); }}>
+            onClick={() => { setActiveTab("user"); setError(""); }}
+          >
             🧑 Citizen
           </button>
-          <button type="button"
+          <button
+            type="button"
             className={activeTab === "department" ? "auth-tab auth-tab-active" : "auth-tab"}
-            onClick={() => { setActiveTab("department"); setError(""); }}>
+            onClick={() => { setActiveTab("department"); setError(""); }}
+          >
             🏛️ Department
           </button>
         </div>
@@ -77,9 +84,15 @@ export default function Login() {
             <label className="form-label">
               {activeTab === "department" ? "Official Email" : "Email"}
             </label>
-            <input type="email" name="email" className="form-input"
-              placeholder="you@example.com" value={form.email}
-              onChange={handleChange} autoComplete="email" />
+            <input
+              type="email"
+              name="email"
+              className="form-input"
+              placeholder={activeTab === "department" ? "officer@dept.gov.in" : "you@example.com"}
+              value={form.email}
+              onChange={handleChange}
+              autoComplete="email"
+            />
           </div>
 
           <div className="form-group">
@@ -89,9 +102,15 @@ export default function Login() {
                 Forgot password?
               </Link>
             </div>
-            <input type="password" name="password" className="form-input"
-              placeholder="••••••••" value={form.password}
-              onChange={handleChange} autoComplete="current-password" />
+            <input
+              type="password"
+              name="password"
+              className="form-input"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+            />
           </div>
 
           {error && <p className="auth-error">{error}</p>}
@@ -109,4 +128,3 @@ export default function Login() {
     </div>
   );
 }
-
