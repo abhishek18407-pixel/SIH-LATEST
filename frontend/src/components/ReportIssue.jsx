@@ -188,7 +188,7 @@ export default function ReportIssue() {
 
       if (!aiResult) {
         const { mockAIAnalyze } = await import("../data/mockData.js");
-        aiResult = mockAIAnalyze(finalTranscript);
+        aiResult = await mockAIAnalyze(finalTranscript);
       }
 
       setComplaintDraft({
