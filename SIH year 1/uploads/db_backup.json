@@ -1,0 +1,286 @@
+{
+  "users": [
+    {
+      "id": "u0000000-0000-0000-0000-000000000001",
+      "phone_number": "+919876543210",
+      "preferred_language": "en",
+      "created_at": "2026-08-17T09:03:39.931673+00:00"
+    }
+  ],
+  "departments": [
+    {
+      "id": "d0000000-0000-0000-0000-000000000001",
+      "name": "Roads & Infrastructure",
+      "officer_email": "roads.officer@civic.gov.in"
+    },
+    {
+      "id": "d0000000-0000-0000-0000-000000000002",
+      "name": "Water Supply & Sewage",
+      "officer_email": "water.officer@civic.gov.in"
+    },
+    {
+      "id": "d0000000-0000-0000-0000-000000000003",
+      "name": "Electricity & Public Lighting",
+      "officer_email": "power.officer@civic.gov.in"
+    },
+    {
+      "id": "d0000000-0000-0000-0000-000000000004",
+      "name": "Waste Management & Sanitation",
+      "officer_email": "sanitation.officer@civic.gov.in"
+    },
+    {
+      "id": "d0000000-0000-0000-0000-000000000005",
+      "name": "Public Health",
+      "officer_email": "health.officer@civic.gov.in"
+    }
+  ],
+  "complaints": [
+    {
+      "id": "c0000000-0000-0000-0000-000000000001",
+      "tracking_id": "#GR-2026-1001",
+      "citizen_phone": "+919876543210",
+      "raw_text": "Severe deep pothole near MG Road metro station causing heavy traffic backlog.",
+      "translated_text": "Deep road pothole near MG Road metro station creating hazard for commuters.",
+      "department_id": "d0000000-0000-0000-0000-000000000001",
+      "urgency": "HIGH",
+      "status": "IN_PROGRESS",
+      "lat": 12.9716,
+      "long": 77.5946,
+      "photo_url": null,
+      "created_at": "2026-08-17T09:03:39.931673+00:00",
+      "updated_at": "2026-08-17T09:03:39.931673+00:00"
+    },
+    {
+      "id": "c0000000-0000-0000-0000-000000000002",
+      "tracking_id": "#GR-2026-1002",
+      "citizen_phone": "+919876543211",
+      "raw_text": "Overflowing waste dumpster near Indiranagar 100ft road spreading foul smell.",
+      "translated_text": "Sanitation crisis: Waste container overflow near commercial hub.",
+      "department_id": "d0000000-0000-0000-0000-000000000004",
+      "urgency": "CRITICAL",
+      "status": "PENDING",
+      "lat": 12.9784,
+      "long": 77.6408,
+      "photo_url": null,
+      "created_at": "2026-08-17T09:03:39.931673+00:00",
+      "updated_at": "2026-08-17T09:03:39.931673+00:00"
+    },
+    {
+      "id": "c0000000-0000-0000-0000-000000000003",
+      "tracking_id": "#GR-2026-1003",
+      "citizen_phone": "+919876543212",
+      "raw_text": "Broken main water pipe leaking clean drinking water on main street.",
+      "translated_text": "Burst water pipe flooding main thoroughfare in Koramangala block 4.",
+      "department_id": "d0000000-0000-0000-0000-000000000002",
+      "urgency": "HIGH",
+      "status": "PENDING",
+      "lat": 12.9352,
+      "long": 77.6245,
+      "photo_url": null,
+      "created_at": "2026-08-17T09:03:39.931673+00:00",
+      "updated_at": "2026-08-17T09:03:39.931673+00:00"
+    },
+    {
+      "id": "6fbdb64b-16ac-455b-9f73-b95cc1fa2081",
+      "tracking_id": "#GR-2026-9999",
+      "citizen_phone": "+919876543210",
+      "raw_text": "Test pothole",
+      "translated_text": "Test pothole",
+      "department_id": "d0000000-0000-0000-0000-000000000001",
+      "urgency": "MEDIUM",
+      "status": "PENDING",
+      "lat": null,
+      "long": null,
+      "photo_url": null,
+      "audio_url": null,
+      "created_at": "2026-08-17T09:06:58.133498+00:00",
+      "updated_at": "2026-08-17T09:06:58.133498+00:00"
+    },
+    {
+      "id": "66f83768-36f4-41fd-8a1c-38004f4397dc",
+      "tracking_id": "#GR-2026-7665",
+      "citizen_phone": "+919876543210",
+      "raw_text": "Severe water logging and blocked drain near Indiranagar Metro Station causing major traffic blockage",
+      "translated_text": "Severe water logging and blocked drain near Indiranagar Metro Station causing major traffic blockage",
+      "department_id": "d0000000-0000-0000-0000-000000000001",
+      "urgency": "MEDIUM",
+      "status": "PENDING",
+      "lat": 12.9784,
+      "long": 77.6408,
+      "photo_url": null,
+      "audio_url": null,
+      "created_at": "2026-08-17T09:08:50.690042+00:00",
+      "updated_at": "2026-08-17T09:08:50.690042+00:00"
+    },
+    {
+      "id": "b669af98-8e21-4a72-a200-f0f0b1bd84af",
+      "tracking_id": "#GR-2026-7102",
+      "citizen_phone": "+919876543210",
+      "raw_text": "Severe water logging and blocked drain near Indiranagar Metro Station causing major traffic blockage",
+      "translated_text": "Severe water logging and blocked drain near Indiranagar Metro Station causing major traffic blockage",
+      "department_id": "d0000000-0000-0000-0000-000000000001",
+      "urgency": "MEDIUM",
+      "status": "PENDING",
+      "lat": 12.9784,
+      "long": 77.6408,
+      "photo_url": null,
+      "audio_url": null,
+      "created_at": "2026-08-17T09:10:33.723925+00:00",
+      "updated_at": "2026-08-17T09:10:33.723925+00:00"
+    },
+    {
+      "id": "6a30d769-962a-454a-a0a8-1e404698fecd",
+      "tracking_id": "#GR-2026-5953",
+      "citizen_phone": "+919876543210",
+      "raw_text": "Severe water logging and blocked drain near Indiranagar Metro Station causing major traffic blockage",
+      "translated_text": "Severe water logging and blocked drain near Indiranagar Metro Station causing major traffic blockage",
+      "department_id": "d0000000-0000-0000-0000-000000000001",
+      "urgency": "MEDIUM",
+      "status": "IN_PROGRESS",
+      "lat": 12.9784,
+      "long": 77.6408,
+      "photo_url": null,
+      "audio_url": null,
+      "created_at": "2026-08-17T09:12:25.475678+00:00",
+      "updated_at": "2026-08-17T09:12:28.823944+00:00"
+    },
+    {
+      "id": "28bac191-d20f-4fd9-a6ee-419a2023cdf5",
+      "tracking_id": "#GR-2026-1796",
+      "citizen_phone": "+919876543210",
+      "raw_text": "Deep hazardous pothole near Trinity Metro Station on MG Road causing severe traffic congestion.",
+      "translated_text": "Deep hazardous pothole near Trinity Metro Station on MG Road causing severe traffic congestion.",
+      "department_id": "d0000000-0000-0000-0000-000000000001",
+      "urgency": "MEDIUM",
+      "status": "IN_PROGRESS",
+      "lat": 12.9716,
+      "long": 77.5946,
+      "photo_url": "https://civic.gov.in/uploads/pothole_mgroad.jpg",
+      "audio_url": null,
+      "created_at": "2026-08-17T09:12:56.172189+00:00",
+      "updated_at": "2026-08-17T09:13:02.875443+00:00"
+    },
+    {
+      "id": "42483edb-394b-4ccd-99cd-af59d100a665",
+      "tracking_id": "#GR-2026-2824",
+      "citizen_phone": "+919876543210",
+      "raw_text": "Deep hazardous pothole near Trinity Metro Station on MG Road causing severe traffic congestion.",
+      "translated_text": "Deep hazardous pothole near Trinity Metro Station on MG Road causing severe traffic congestion.",
+      "department_id": "d0000000-0000-0000-0000-000000000001",
+      "urgency": "MEDIUM",
+      "status": "IN_PROGRESS",
+      "lat": 12.9716,
+      "long": 77.5946,
+      "photo_url": "https://civic.gov.in/uploads/pothole_mgroad.jpg",
+      "audio_url": null,
+      "created_at": "2026-08-17T09:13:49.668167+00:00",
+      "updated_at": "2026-08-17T09:13:56.570598+00:00"
+    },
+    {
+      "id": "dff82774-d469-44a2-a3fa-6cd8642b1731",
+      "tracking_id": "#GR-2026-3073",
+      "citizen_phone": "+919876543210",
+      "raw_text": "pothole",
+      "translated_text": "pothole",
+      "department_id": "d0000000-0000-0000-0000-000000000001",
+      "urgency": "MEDIUM",
+      "status": "PENDING",
+      "lat": 13.057194810618746,
+      "long": 77.54934940500307,
+      "photo_url": null,
+      "audio_url": null,
+      "created_at": "2026-08-17T09:16:27.352244+00:00",
+      "updated_at": "2026-08-17T09:16:27.352244+00:00"
+    }
+  ],
+  "status_logs": [
+    {
+      "id": "l0000000-0000-0000-0000-000000000001",
+      "complaint_id": "c0000000-0000-0000-0000-000000000001",
+      "old_status": "PENDING",
+      "new_status": "IN_PROGRESS",
+      "notes": "Field team dispatched to inspect road damage.",
+      "updated_at": "2026-08-17T09:03:39.931673+00:00"
+    },
+    {
+      "id": "12e70bef-4204-4b12-87b5-3f76149fd0d9",
+      "complaint_id": "6fbdb64b-16ac-455b-9f73-b95cc1fa2081",
+      "old_status": null,
+      "new_status": "PENDING",
+      "notes": "Complaint registered via SIH AI Gateway",
+      "updated_at": "2026-08-17T09:06:58.133498+00:00"
+    },
+    {
+      "id": "a16dc384-c363-4014-82c4-6ff5967c2ea4",
+      "complaint_id": "66f83768-36f4-41fd-8a1c-38004f4397dc",
+      "old_status": null,
+      "new_status": "PENDING",
+      "notes": "Complaint registered via SIH AI Gateway",
+      "updated_at": "2026-08-17T09:08:50.690042+00:00"
+    },
+    {
+      "id": "3e9e509e-72a1-43c8-ae61-713a6529d7ba",
+      "complaint_id": "b669af98-8e21-4a72-a200-f0f0b1bd84af",
+      "old_status": null,
+      "new_status": "PENDING",
+      "notes": "Complaint registered via SIH AI Gateway",
+      "updated_at": "2026-08-17T09:10:33.723925+00:00"
+    },
+    {
+      "id": "8cc4e3a2-5f70-45cd-a2f0-f8c1ca7133bc",
+      "complaint_id": "6a30d769-962a-454a-a0a8-1e404698fecd",
+      "old_status": null,
+      "new_status": "PENDING",
+      "notes": "Complaint registered via SIH AI Gateway",
+      "updated_at": "2026-08-17T09:12:25.475678+00:00"
+    },
+    {
+      "id": "cd7f69d9-1504-4d2c-a568-f56d98434537",
+      "complaint_id": "6a30d769-962a-454a-a0a8-1e404698fecd",
+      "old_status": "IN_PROGRESS",
+      "new_status": "IN_PROGRESS",
+      "notes": "Emergency PWD drainage team dispatched to Indiranagar Metro Station.",
+      "updated_at": "2026-08-17T09:12:28.823944+00:00"
+    },
+    {
+      "id": "3e7468b6-7c60-4153-a51d-2c506c4530c0",
+      "complaint_id": "28bac191-d20f-4fd9-a6ee-419a2023cdf5",
+      "old_status": null,
+      "new_status": "PENDING",
+      "notes": "Complaint registered via SIH AI Gateway",
+      "updated_at": "2026-08-17T09:12:56.172189+00:00"
+    },
+    {
+      "id": "30590323-3144-438c-9b2f-827cc57d7708",
+      "complaint_id": "28bac191-d20f-4fd9-a6ee-419a2023cdf5",
+      "old_status": "IN_PROGRESS",
+      "new_status": "IN_PROGRESS",
+      "notes": "Road inspection team dispatched to Trinity Metro Station.",
+      "updated_at": "2026-08-17T09:13:02.875443+00:00"
+    },
+    {
+      "id": "49d8bce9-d6a6-4e84-8872-f709c7a7df14",
+      "complaint_id": "42483edb-394b-4ccd-99cd-af59d100a665",
+      "old_status": null,
+      "new_status": "PENDING",
+      "notes": "Complaint registered via SIH AI Gateway",
+      "updated_at": "2026-08-17T09:13:49.668167+00:00"
+    },
+    {
+      "id": "74767933-271d-4274-8b55-d920320c4792",
+      "complaint_id": "42483edb-394b-4ccd-99cd-af59d100a665",
+      "old_status": "IN_PROGRESS",
+      "new_status": "IN_PROGRESS",
+      "notes": "Road inspection team dispatched to Trinity Metro Station.",
+      "updated_at": "2026-08-17T09:13:56.570598+00:00"
+    },
+    {
+      "id": "7547951a-465e-4dd3-a075-c245e4312bcd",
+      "complaint_id": "dff82774-d469-44a2-a3fa-6cd8642b1731",
+      "old_status": null,
+      "new_status": "PENDING",
+      "notes": "Complaint registered via SIH AI Gateway",
+      "updated_at": "2026-08-17T09:16:27.352244+00:00"
+    }
+  ]
+}

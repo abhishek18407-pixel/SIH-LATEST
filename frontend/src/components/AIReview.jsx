@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+import { supabase } from "../lib/supabaseClient.js";
 import { DEPARTMENTS, generateComplaintId } from "../data/mockData.js";
 
 export default function AIReview() {
   const navigate = useNavigate();
-  const { complaintDraft, setSubmittedComplaints, submittedComplaints, speakKey } = useApp();
+  const { user } = useAuth();
+  const { complaintDraft, setSubmittedComplaints, submittedComplaints, speakKey, language } = useApp();
   const [editing, setEditing] = useState(false);
   const [department, setDepartment] = useState(complaintDraft.aiResult?.department);
   const [severity, setSeverity] = useState(complaintDraft.aiResult?.severity);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!complaintDraft.aiResult) {
     navigate("/report");
@@ -18,12 +22,66 @@ export default function AIReview() {
   const badgeClass =
     severity === "High" ? "badge-high" : severity === "Low" ? "badge-low" : "badge-medium";
 
-  function confirmSubmit() {
-    const trackingId = complaintDraft.aiResult?.tracking_id || complaintDraft.createdRecord?.tracking_id || generateComplaintId();
+  async function confirmSubmit() {
+    setSubmitting(true);
+    const trackingId = generateComplaintId();
+
+    try {
+      if (user) {
+        let photoUrl = null;
+        if (complaintDraft.photoFile) {
+          try {
+            const fileExt = complaintDraft.photoFile.name.split('.').pop();
+            const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+            const { data: uploadData } = await supabase.storage
+              .from('complaint-photos')
+              .upload(filePath, complaintDraft.photoFile);
+            if (uploadData) {
+              const { data: urlData } = supabase.storage
+                .from('complaint-photos')
+                .getPublicUrl(filePath);
+              photoUrl = urlData?.publicUrl;
+            }
+          } catch {}
+        }
+
+        // Insert into Supabase complaints table
+        const { data: complaintRow } = await supabase
+          .from("complaints")
+          .insert({
+            complaint_id: trackingId,
+            user_id: user.id,
+            original_text: complaintDraft.transcript,
+            english_text: complaintDraft.transcript,
+            language_code: language || "en",
+            photo_url: photoUrl,
+            location_lat: complaintDraft.location?.lat || null,
+            location_lng: complaintDraft.location?.lng || null,
+            ai_issue: complaintDraft.aiResult?.issue || "Civic Grievance",
+            ai_department: department || "Roads & Infrastructure (PWD)",
+            ai_severity: severity || "Medium",
+            status: "Open",
+          })
+          .select()
+          .single();
+
+        if (complaintRow) {
+          await supabase.from("complaint_timeline").insert({
+            complaint_id: complaintRow.id,
+            status: "Complaint Registered",
+            note: `Grievance registered and assigned to ${department || "Department"}`,
+            created_by: user.id,
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Cloud save note:", e);
+    }
+
     const record = {
       id: trackingId,
       issue: complaintDraft.aiResult?.issue || complaintDraft.transcript,
-      department: department || "Roads & Infrastructure",
+      department: department || "Roads & Infrastructure (PWD)",
       severity: severity || "Medium",
       transcript: complaintDraft.transcript,
       location: complaintDraft.location,
@@ -31,6 +89,7 @@ export default function AIReview() {
       createdAt: new Date().toLocaleString(),
     };
     setSubmittedComplaints([...submittedComplaints, record]);
+    setSubmitting(false);
     navigate("/registered", { state: { id: trackingId } });
   }
 

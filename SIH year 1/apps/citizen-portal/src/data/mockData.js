@@ -65,7 +65,7 @@ export function mockAIAnalyze(transcript) {
   for (const rule of rules) {
     if (rule.keywords.some((kw) => text.includes(kw))) {
       return {
-        issue: `${rule.dept.split(" (")[0]} issue`,
+        issue: `${rule.dept.split(" (")[0]} - ${transcript.length > 50 ? transcript.slice(0, 50) + '...' : transcript}`,
         department: rule.dept,
         severity: rule.severity,
         confidence: 0.85,
@@ -74,15 +74,13 @@ export function mockAIAnalyze(transcript) {
     }
   }
 
-  // No keyword matched — be HONEST about it instead of guessing a department.
-  // A real complaint like "abc" or an unclear sentence should be flagged for
-  // human review, not silently misrouted.
+  // Fallback if no specific department matched
   return {
-    issue: "Unable to confidently classify — needs review",
+    issue: transcript.length > 60 ? transcript.slice(0, 60) + "..." : transcript || "Civic grievance reported",
     department: "General Administration",
     severity: "Medium",
-    confidence: 0.2,
-    unclassified: true,
+    confidence: 0.7,
+    unclassified: false,
   };
 }
 

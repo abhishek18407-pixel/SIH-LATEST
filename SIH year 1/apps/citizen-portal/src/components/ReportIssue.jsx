@@ -1,14 +1,30 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
 
-const BACKEND_URL = typeof window !== "undefined" && window.location.origin.includes("http")
+const BACKEND_URL = typeof window !== "undefined" && window.location.port === "8000"
   ? window.location.origin
   : "http://localhost:8000";
 
+const LOCALE_MAP = {
+  en: "en-IN",
+  hi: "hi-IN",
+  te: "te-IN",
+  ta: "ta-IN",
+  kn: "kn-IN",
+  mr: "mr-IN",
+  bn: "bn-IN",
+  gu: "gu-IN",
+  pa: "pa-IN",
+  ml: "ml-IN",
+  or: "or-IN",
+  as: "as-IN",
+  ur: "ur-IN",
+};
+
 export default function ReportIssue() {
   const navigate = useNavigate();
-  const { setComplaintDraft, speakKey } = useApp();
+  const { setComplaintDraft, speakKey, language } = useApp();
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [text, setText] = useState("");
@@ -16,16 +32,37 @@ export default function ReportIssue() {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoName, setPhotoName] = useState(null);
   const [location, setLocation] = useState(null);
+  const [speechStatus, setSpeechStatus] = useState("");
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {}
+      }
+    };
+  }, []);
 
   async function toggleRecording() {
     if (recording) {
-      mediaRecorderRef.current?.stop();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {}
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        mediaRecorderRef.current.stop();
+      }
       setRecording(false);
+      setSpeechStatus("✓ Voice converted to text");
       return;
     }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -40,9 +77,41 @@ export default function ReportIssue() {
         setAudioBlob(blob);
       };
       mediaRecorder.start();
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognitionRef.current = recognition;
+        const locale = LOCALE_MAP[language?.code] || "hi-IN";
+        recognition.lang = locale;
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        let initialText = text ? text + " " : "";
+
+        recognition.onresult = (event) => {
+          let currentTranscript = "";
+          for (let i = 0; i < event.results.length; i++) {
+            currentTranscript += event.results[i][0].transcript;
+          }
+          setText(initialText + currentTranscript);
+        };
+
+        recognition.onerror = (event) => {
+          console.warn("Browser Speech Recognition event:", event.error);
+        };
+
+        try {
+          recognition.start();
+        } catch (e) {
+          console.warn("Speech recognition start note:", e);
+        }
+      }
+
       setRecording(true);
+      setSpeechStatus(`Listening in ${language?.native || language?.label || "your language"}... speak now`);
     } catch (err) {
-      alert("Could not access microphone. Please check browser permissions.");
+      alert("Could not access microphone. Please allow microphone permissions in your browser.");
     }
   }
 
@@ -78,6 +147,7 @@ export default function ReportIssue() {
       if (audioBlob) formData.append("audio", audioBlob, "grievance_voice.mp3");
       if (photoFile) formData.append("photo", photoFile);
       formData.append("citizen_phone", "+919876543210");
+      formData.append("language_code", language?.code || "hi");
       if (location) {
         formData.append("lat", location.lat.toString());
         formData.append("long", location.lng.toString());
@@ -133,12 +203,16 @@ export default function ReportIssue() {
         🎤
       </button>
       <div style={{ textAlign: "center", fontSize: 13, color: "#888", marginBottom: 8 }}>
-        {recording ? "Listening, tap again to stop" : processing ? "🤖 Gemini AI processing speech..." : audioBlob ? "✓ Voice Recorded (.mp3 format ready)" : "Tap to speak voice complaint"}
+        {recording
+          ? speechStatus || "Listening... speak now"
+          : processing
+          ? "🤖 Generating AI summary & routing..."
+          : speechStatus || (text ? "✓ Text ready" : "Tap mic to speak in your language")}
       </div>
 
       <textarea
         rows={4}
-        placeholder="Or type your complaint details here..."
+        placeholder="Your speech will appear here automatically, or you can type here..."
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
@@ -160,7 +234,7 @@ export default function ReportIssue() {
 
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSubmit} disabled={processing}>
-          {processing ? "⌛ Gemini AI Processing..." : "Continue →"}
+          {processing ? "⌛ AI Processing..." : "Continue →"}
         </button>
         <span style={{ fontSize: 20, cursor: "pointer" }} onClick={() => speakKey("continue")}>🔊</span>
       </div>

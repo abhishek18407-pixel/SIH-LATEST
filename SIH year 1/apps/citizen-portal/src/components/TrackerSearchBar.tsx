@@ -23,7 +23,11 @@ export const TrackerSearchBar: React.FC<TrackerSearchBarProps> = ({ initialTrack
     const encodedId = encodeURIComponent(cleanId);
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/complaints/track/${encodedId}`);
+      const baseUrl = typeof window !== 'undefined' && window.location.origin.includes('http')
+        ? `${window.location.origin}/api/complaints/track`
+        : 'http://127.0.0.1:8000/api/complaints/track';
+
+      const response = await fetch(`${baseUrl}/${encodedId}`);
 
       if (!response.ok) {
         if (response.status === 404) {

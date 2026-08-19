@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
 
-const BACKEND_URL = typeof window !== "undefined" && window.location.origin.includes("http")
+const BACKEND_URL = typeof window !== "undefined" && window.location.port === "8000"
   ? window.location.origin
   : "http://localhost:8000";
 

@@ -1,19 +1,55 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Welcome() {
   const navigate = useNavigate();
+  const { user, profile, role, logout } = useAuth();
+
+  useEffect(() => {
+    if (user && role === "department") {
+      navigate("/dept-dashboard", { replace: true });
+    }
+  }, [user, role, navigate]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
+  const handleGetStarted = () => {
+    if (!user) return navigate("/login");
+    if (role === "department") return navigate("/dept-dashboard");
+    navigate("/language");
+  };
+
+  const handleTrack = () => {
+    if (!user) return navigate("/login");
+    navigate("/track");
+  };
 
   return (
     <div className="screen welcome-screen">
       <div className="welcome-panel">
         <div className="welcome-copy">
-          <div className="eyebrow">Civic infrastructure made simpler</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div className="eyebrow" style={{ margin: 0 }}>Civic infrastructure made simpler</div>
+            {user && (
+              <button
+                className="btn btn-outline"
+                style={{ width: "auto", padding: "6px 14px", fontSize: 12, margin: 0 }}
+                onClick={handleLogout}
+              >
+                Sign Out
+              </button>
+            )}
+          </div>
           <h1 className="title">Civic Voice</h1>
           <p className="subtitle">Speak in your language, report local issues quickly, and keep track of every step.</p>
 
           <div className="welcome-actions">
-            <button className="btn btn-primary" onClick={() => navigate("/language")}>Get Started</button>
-            <button className="btn btn-outline" onClick={() => navigate("/track")}>Track Existing Complaint</button>
+            <button className="btn btn-primary" onClick={handleGetStarted}>Get Started</button>
+            <button className="btn btn-outline" onClick={handleTrack}>Track Existing Complaint</button>
           </div>
 
           <div className="welcome-highlights">

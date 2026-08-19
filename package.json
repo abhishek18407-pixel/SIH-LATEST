@@ -1,0 +1,22 @@
+{
+  "name": "smart-city-civic-grievance",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smart City AI-Powered Civic Grievance Redressal System",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "preview": "npm --prefix frontend run preview"
+  },
+  "keywords": [
+    "civic-grievance",
+    "smart-city",
+    "vercel",
+    "react",
+    "vite",
+    "supabase",
+    "groq"
+  ],
+  "author": "SIH Team",
+  "license": "MIT"
+}

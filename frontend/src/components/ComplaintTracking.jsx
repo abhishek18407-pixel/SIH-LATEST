@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
-
-const BACKEND_URL = typeof window !== "undefined" && window.location.origin.includes("http")
-  ? window.location.origin
-  : "http://localhost:8000";
+import { supabase } from "../lib/supabaseClient.js";
 
 export default function ComplaintTracking() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { speakKey } = useApp();
+  const { speakKey, submittedComplaints } = useApp();
   const [searchId, setSearchId] = useState(state?.id || "");
   const [loading, setLoading] = useState(false);
   const [trackData, setTrackData] = useState(null);
@@ -20,14 +17,72 @@ export default function ComplaintTracking() {
 
     setLoading(true);
     try {
-      const cleanId = encodeURIComponent(q);
-      const res = await fetch(`${BACKEND_URL}/api/complaints/track/${cleanId}`);
-      if (!res.ok) {
-        if (res.status === 404) throw new Error(`Tracking code '${q}' not found.`);
-        throw new Error("Failed to fetch tracking details.");
+      // 1. Try querying Supabase live database
+      const { data: dbComplaint, error: dbErr } = await supabase
+        .from("complaints")
+        .select(`
+          *,
+          complaint_timeline (*)
+        `)
+        .eq("complaint_id", q)
+        .maybeSingle();
+
+      if (dbComplaint) {
+        setTrackData({
+          complaint: {
+            tracking_id: dbComplaint.complaint_id,
+            status: dbComplaint.status,
+            department_name: dbComplaint.ai_department,
+            urgency: dbComplaint.ai_severity,
+            translated_text: dbComplaint.english_text || dbComplaint.original_text,
+            raw_text: dbComplaint.original_text,
+            photo_url: dbComplaint.photo_url,
+            created_at: dbComplaint.created_at,
+          },
+          status_timeline: dbComplaint.complaint_timeline?.map((t) => ({
+            new_status: t.status,
+            notes: t.note,
+            updated_at: t.created_at,
+          })) || [
+            {
+              new_status: dbComplaint.status,
+              notes: `Routed to ${dbComplaint.ai_department}`,
+              updated_at: dbComplaint.created_at,
+            },
+          ],
+        });
+        return;
       }
-      const data = await res.json();
-      setTrackData(data);
+
+      // 2. Fallback to local session complaints
+      const local = submittedComplaints.find((c) => c.id === q);
+      if (local) {
+        setTrackData({
+          complaint: {
+            tracking_id: local.id,
+            status: "Open",
+            department_name: local.department,
+            urgency: local.severity,
+            translated_text: local.issue,
+            created_at: local.createdAt,
+          },
+          status_timeline: [
+            {
+              new_status: "Complaint Registered",
+              notes: "Grievance registered & categorized via AI",
+              updated_at: new Date().toISOString(),
+            },
+            {
+              new_status: "Assigned to Department",
+              notes: `Assigned to ${local.department}`,
+              updated_at: new Date().toISOString(),
+            },
+          ],
+        });
+        return;
+      }
+
+      throw new Error(`Tracking code '${q}' not found.`);
     } catch (err) {
       alert(err.message || "Tracking lookup error");
       setTrackData(null);

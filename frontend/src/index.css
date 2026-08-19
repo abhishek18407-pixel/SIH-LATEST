@@ -549,3 +549,196 @@ textarea, input[type="text"] {
 }
 .chat-user { background: var(--text); color: #0f0f0f; align-self: flex-end; margin-left: auto; }
 .chat-bot { background: rgba(60, 60, 58, 0.6); color: var(--text); align-self: flex-start; }
+
+/* ─── Auth Pages ──────────────────────────────────────────────────────────── */
+
+.auth-screen {
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(160deg, rgba(72, 72, 70, 0.55), rgba(52, 52, 50, 0.7));
+  border: 1px solid rgba(138, 143, 128, 0.18);
+  border-radius: 24px;
+  padding: clamp(28px, 5vw, 44px) clamp(24px, 5vw, 40px);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255,255,255,0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Pill tab switcher */
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  background: rgba(40, 40, 38, 0.55);
+  border: 1px solid rgba(138, 143, 128, 0.15);
+  border-radius: 999px;
+  padding: 5px;
+  margin-bottom: 28px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  letter-spacing: 0.01em;
+}
+
+.auth-tab:hover {
+  color: var(--text);
+}
+
+.auth-tab-active {
+  background: linear-gradient(135deg, #e8e6e1, #d4d0c8);
+  color: #1f1f1f;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Form fields */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(138, 143, 128, 0.22);
+  background: rgba(50, 50, 48, 0.55);
+  font-size: 14.5px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  margin-top: 0;
+}
+
+.form-input:focus {
+  border-color: rgba(213, 224, 206, 0.5);
+  box-shadow: 0 0 0 3px rgba(138, 143, 128, 0.12);
+}
+
+.form-input::placeholder {
+  color: rgba(200, 199, 195, 0.38);
+}
+
+/* Feedback messages */
+.auth-error {
+  font-size: 13px;
+  color: var(--danger);
+  background: rgba(216, 157, 143, 0.1);
+  border: 1px solid rgba(216, 157, 143, 0.22);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.auth-success {
+  font-size: 13px;
+  color: var(--success);
+  background: rgba(159, 212, 200, 0.1);
+  border: 1px solid rgba(159, 212, 200, 0.22);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* Footer link row */
+.auth-footer {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 22px;
+}
+
+.auth-link {
+  color: var(--sage-strong);
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.14s ease;
+}
+
+.auth-link:hover {
+  opacity: 0.75;
+}
+
+/* OTP digit input */
+.otp-input {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.5em;
+  text-align: center;
+  padding: 16px 14px;
+  border-radius: 14px;
+}
+
+/* Recovery code display box */
+.recovery-code-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(30, 30, 28, 0.7);
+  border: 2px solid rgba(213, 224, 206, 0.35);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin: 4px 0;
+}
+
+.recovery-code-digits {
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: var(--sage-strong);
+  font-variant-numeric: tabular-nums;
+  user-select: all;
+}
+
+.copy-btn {
+  background: rgba(138, 143, 128, 0.15);
+  border: 1px solid rgba(138, 143, 128, 0.3);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.copy-btn:hover {
+  background: rgba(138, 143, 128, 0.28);
+}
+
+/* Divider between form sections */
+.auth-divider {
+  height: 1px;
+  background: rgba(138, 143, 128, 0.2);
+  margin: 12px 0 20px;
+}

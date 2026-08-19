@@ -20,11 +20,11 @@ class TestServerAPI(unittest.TestCase):
         print("\n=======================================================")
         print(" RUNNING REST API BACKEND INTEGRATION BENCHMARK ")
         print("=======================================================")
-        response = client.get("/")
+        response = client.get("/api/health")
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["status"], "online")
-        print("[PASS] GET / root health check successful.")
+        print("[PASS] GET /api/health root health check successful.")
 
     def test_02_create_complaint(self):
         print("\n--- Testing 1. POST /api/complaints ---")
