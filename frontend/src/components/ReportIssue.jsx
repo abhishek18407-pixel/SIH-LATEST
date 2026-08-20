@@ -23,7 +23,7 @@ const LOCALE_MAP = {
 
 export default function ReportIssue() {
   const navigate = useNavigate();
-  const { setComplaintDraft, speakKey, language, setLanguage } = useApp();
+  const { setComplaintDraft, speakKey, language } = useApp();
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [text, setText] = useState("");
@@ -309,32 +309,6 @@ export default function ReportIssue() {
         <span style={{ fontSize: 18, cursor: "pointer", marginBottom: 20 }} onClick={() => speakKey("report_subtitle")}>🔊</span>
       </div>
 
-      {/* Quick Language Selector */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, overflowX: "auto", paddingBottom: 4 }}>
-        <span style={{ fontSize: 13, color: "#666", whiteSpace: "nowrap" }}>Speaking in:</span>
-        <select
-          value={currentLangCode}
-          onChange={(e) => {
-            const selected = LANGUAGES.find((l) => l.code === e.target.value);
-            if (selected) setLanguage(selected);
-          }}
-          style={{
-            padding: "6px 12px",
-            borderRadius: 8,
-            border: "1px solid #ccc",
-            fontSize: 13,
-            fontWeight: "600",
-            background: "#fff",
-            cursor: "pointer"
-          }}
-        >
-          {LANGUAGES.map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.native} ({l.label})
-            </option>
-          ))}
-        </select>
-      </div>
 
       {/* Pulsing Mic Button */}
       <button
