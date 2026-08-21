@@ -87,14 +87,21 @@ export default function ReportIssue() {
         recognition.continuous = true;
         recognition.interimResults = true;
 
-        let initialText = text ? text + " " : "";
+        let initialText = text ? text.trim() + " " : "";
 
         recognition.onresult = (event) => {
-          let currentTranscript = "";
+          let currentFinal = "";
+          let currentInterim = "";
           for (let i = 0; i < event.results.length; i++) {
-            currentTranscript += event.results[i][0].transcript;
+            const tr = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              currentFinal += tr + " ";
+            } else {
+              currentInterim += tr;
+            }
           }
-          setText(initialText + currentTranscript);
+          const total = (initialText + currentFinal + currentInterim).replace(/\s+/g, " ").trim();
+          setText(total);
         };
 
         recognition.onerror = (event) => {

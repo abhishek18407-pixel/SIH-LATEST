@@ -37,14 +37,16 @@ export default function ReportIssue() {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recognitionRef = useRef(null);
-  const finalTextRef = useRef("");
+  const baseTextRef = useRef("");
+  const currentSessionFinalRef = useRef("");
+  const textRef = useRef(text);
 
   // Determine current active language code
   const currentLangCode = language?.code || "hi";
   const currentLangObj = LANGUAGES.find((l) => l.code === currentLangCode) || LANGUAGES[1];
 
   useEffect(() => {
-    finalTextRef.current = text;
+    textRef.current = text;
   }, [text]);
 
   useEffect(() => {
@@ -67,7 +69,10 @@ export default function ReportIssue() {
     isRecordingRef.current = true;
     setRecording(true);
     setSpeechStatus(`🎙️ Listening in ${currentLangObj.native} (${currentLangObj.label})... speak now`);
-    finalTextRef.current = text ? text.trim() + " " : "";
+
+    const existingText = textRef.current.trim();
+    baseTextRef.current = existingText ? existingText + " " : "";
+    currentSessionFinalRef.current = "";
 
     // 1. Start MediaRecorder (Audio capture for Whisper AI fallback)
     try {
@@ -86,7 +91,7 @@ export default function ReportIssue() {
         setAudioBlob(blob);
 
         // If browser Speech Recognition didn't produce text, transcribe with Whisper backend
-        if (!finalTextRef.current.trim() && blob.size > 1000) {
+        if (!textRef.current.trim() && blob.size > 1000) {
           setSpeechStatus("🤖 Transcribing audio via AI Whisper...");
           try {
             const formData = new FormData();
@@ -103,8 +108,7 @@ export default function ReportIssue() {
               const data = await res.json();
               const transcribed = data.text || data.original_text || data.english_text;
               if (transcribed) {
-                setText(transcribed);
-                finalTextRef.current = transcribed;
+                setText(transcribed.trim());
                 setSpeechStatus("✓ Voice converted to text via AI Whisper");
                 return;
               }
@@ -125,7 +129,7 @@ export default function ReportIssue() {
       return;
     }
 
-    // 2. Native Web Speech API (Real-time live speech-to-text)
+    // 2. Native Web Speech API (Real-time live speech-to-text without word repetition)
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       try {
@@ -138,24 +142,29 @@ export default function ReportIssue() {
         recognition.maxAlternatives = 1;
 
         recognition.onresult = (event) => {
-          let interim = "";
-          let final = "";
+          let sessionFinal = "";
+          let sessionInterim = "";
 
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
+          // Accumulate across full result list for the active recognition session
+          for (let i = 0; i < event.results.length; ++i) {
+            const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              final += event.results[i][0].transcript;
+              sessionFinal += transcript + " ";
             } else {
-              interim += event.results[i][0].transcript;
+              sessionInterim += transcript;
             }
           }
 
-          if (final) {
-            finalTextRef.current = (finalTextRef.current + " " + final).trim();
-          }
+          currentSessionFinalRef.current = sessionFinal;
 
-          const currentCombined = (finalTextRef.current + (interim ? " " + interim : "")).trim();
-          if (currentCombined) {
-            setText(currentCombined);
+          const combined = (
+            baseTextRef.current +
+            sessionFinal +
+            (sessionInterim ? sessionInterim : "")
+          ).replace(/\s+/g, " ").trim();
+
+          if (combined) {
+            setText(combined);
             setSpeechStatus(`🎙️ Listening in ${currentLangObj.native}...`);
           }
         };
@@ -168,8 +177,12 @@ export default function ReportIssue() {
         };
 
         recognition.onend = () => {
-          // Restart if user is still in recording mode
+          // Restart cleanly if user is still in recording mode
           if (isRecordingRef.current) {
+            if (currentSessionFinalRef.current) {
+              baseTextRef.current = (baseTextRef.current + currentSessionFinalRef.current).replace(/\s+/g, " ").trim() + " ";
+              currentSessionFinalRef.current = "";
+            }
             try {
               recognition.start();
             } catch {}
@@ -199,7 +212,8 @@ export default function ReportIssue() {
       } catch {}
     }
 
-    setSpeechStatus(text.trim() ? "✓ Voice converted to text" : "✓ Audio captured");
+    setText((prev) => prev.replace(/\s+/g, " ").trim());
+    setSpeechStatus(textRef.current.trim() ? "✓ Voice converted to text" : "✓ Audio captured");
   }
 
   function toggleRecording() {

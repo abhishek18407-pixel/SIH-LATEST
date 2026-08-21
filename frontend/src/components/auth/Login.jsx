@@ -15,17 +15,6 @@ export default function Login() {
   // Success message passed from SignUp or ForgotPassword via router state
   const successMsg = location.state?.message || "";
 
-  // If already logged in on page load, redirect to appropriate portal
-  useEffect(() => {
-    if (!loading && user && role && !busy) {
-      if (role === "department") {
-        navigate("/dept-dashboard", { replace: true });
-      } else if (role === "user") {
-        navigate("/home", { replace: true });
-      }
-    }
-  }, [user, role, loading, busy, navigate]);
-
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -61,6 +50,40 @@ export default function Login() {
         </div>
 
         {successMsg && <p className="auth-success" style={{ marginBottom: 20 }}>{successMsg}</p>}
+
+        {user && (
+          <div style={{
+            background: "rgba(59, 130, 246, 0.08)",
+            border: "1px solid rgba(59, 130, 246, 0.25)",
+            borderRadius: 10,
+            padding: "10px 14px",
+            marginBottom: 20,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontSize: 13,
+            color: "var(--text-secondary)"
+          }}>
+            <div>
+              <span>Active session: </span>
+              <strong style={{ color: "var(--text-primary)" }}>{user.email}</strong>
+            </div>
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{
+                width: "auto",
+                padding: "4px 10px",
+                fontSize: 12,
+                margin: 0,
+                borderColor: "rgba(59, 130, 246, 0.4)"
+              }}
+              onClick={() => navigate(role === "department" ? "/dept-dashboard" : "/home")}
+            >
+              Enter Portal &rarr;
+            </button>
+          </div>
+        )}
 
         <div className="auth-tabs">
           <button

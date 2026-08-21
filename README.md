@@ -1,50 +1,59 @@
-# 🏛️ Smart City Civic Grievance Redressal System (SIH-LATEST)
+# 🏛️ Civic Voice — Smart City AI Civic Grievance Redressal System
 
-[![React](https://img.shields.io/badge/Frontend-React%2019%20%7C%20Vite-blue)](https://vitejs.dev/)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688)](https://fastapi.tiangolo.com/)
-[![Python](https://img.shields.io/badge/Language-Python%203.10+-3776AB)](https://www.python.org/)
-[![AI Engine](https://img.shields.io/badge/AI-Groq%20%7C%20Gemini%20%7C%20Whisper-orange)](https://groq.com/)
-[![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E)](https://supabase.com/)
+[![React](https://img.shields.io/badge/Frontend-React%2019%20%7C%20Vite-blue?logo=react)](https://vitejs.dev/)
+[![Vercel](https://img.shields.io/badge/Deployment-Vercel%20Serverless-black?logo=vercel)](https://vercel.com/)
+[![Supabase](https://img.shields.io/badge/Database%20%26%20Auth-Supabase%20PostgreSQL-3ECF8E?logo=supabase)](https://supabase.com/)
+[![AI Engine](https://img.shields.io/badge/AI-Groq%20%7C%20Whisper%20%7C%20Llama%203.1-orange)](https://groq.com/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-An AI-powered municipal grievance redressal system designed for Smart City civic management. The platform enables citizens to submit multi-lingual voice or text grievances, automatically transcribes and translates regional languages into English, classifies issue severity and urgency using LLMs, routes complaints to municipal departments, and provides real-time tracking for citizens alongside an OpenStreetMap GIS command dashboard for officers.
+An intelligent, multilingual, AI-powered municipal grievance redressal system built for Smart City governance. The platform empowers citizens to report public infrastructure issues effortlessly via **voice in 13+ regional languages**, photo upload, and geolocation tagging. Spoken audio and descriptions are translated and parsed by **Groq / Whisper LLMs** to extract key entities, assign priority severity, and automatically route complaints to the appropriate municipal department. 
+
+Municipal officials manage complaints through an interactive **Leaflet GIS Command Dashboard** with live status dispatch and audit tracking.
 
 ---
 
-## 🚀 Key Features
+## 🌟 Key Features
 
-- **🌐 Multi-Lingual Speech & Text Filing**: Supports 11+ Indian regional languages (Hindi, Kannada, Tamil, Telugu, Marathi, Bengali, Gujarati, Punjabi, Malayalam, Urdu, English) using **OpenAI Whisper** and **Google Gemini API**.
-- **🤖 Automated AI Classification & Auto-Routing**: Uses **Groq (Llama-3.1-8b-instant)** / **Gemini Flash** to parse raw text into structured JSON summaries, extracted landmarks, urgency levels (`Low`, `Medium`, `High`, `Critical`), and auto-assigned departments.
-- **🗺️ Officer Command Dashboard**: Interactive OpenStreetMap Leaflet GIS heatmaps, grievance table, filtering by department/urgency/status, and status updates.
-- **📱 Citizen Mobile Web Portal**: React 19 + Vite mobile-first web app with real-time tracking (`#GR-2026-XXXX`), status timeline, and a conversational AI status assistant.
-- **⚡ Reliable Database & Audit Trail**: Supabase PostgreSQL connection with fallback in-memory store and complete status change audit logging.
+### 🧑 Citizen Portal
+- **🎙️ Voice-First & Multilingual**: Speak or type complaints in 13+ Indian languages (*Hindi, Tamil, Telugu, Kannada, Marathi, Bengali, Gujarati, Punjabi, Malayalam, Odia, Assamese, Urdu, English*).
+- **🤖 Real-Time Speech-to-Text & AI Whisper Fallback**: Native Web Speech API integration with serverless Whisper AI fallback for transcription without word repetition.
+- **📷 Photo & Geolocation Capture**: Attach on-site camera photos and auto-detect GPS coordinates with a single tap.
+- **🔍 AI Categorization & Auto-Routing**: Automatic classification of grievances into municipal departments (*Roads & Infrastructure, Water Supply, Electricity, Sanitation & Waste, Public Health*) and priority assessment (*Low, Medium, High, Critical*).
+- **📍 Real-Time Tracking**: Instant complaint registration with tracking ID (`#GR-2026-XXXX`), live status timeline, and conversational AI assistant.
+
+### 🏛️ Department Official Portal
+- **🔐 Strict Role-Based Access (RBAC)**: Enforced segregation between Citizen and Department accounts backed by Supabase Auth and dual PostgreSQL profile tables.
+- **🗺️ Interactive Leaflet GIS Command Center**: Visual mapping of all city grievances with status and urgency color coding.
+- **⚡ Status Dispatch & Audit Logging**: Real-time status updates (*Open, In Progress, Resolved, Rejected*) with required resolution notes and timestamped timeline logging.
+- **📊 Filter & Search Toolbar**: Live filtering by department, resolution status, urgency, and grievance keyword search.
 
 ---
 
 ## 📐 System Architecture
 
 ```
- ┌────────────────────────────────────────────────────────────────────────┐
- │                         CITIZEN MOBILE PORTAL                          │
- │                (React 19 + Vite / Port 5173 or 3000)                   │
- │  - Multi-Lingual Speech/Text Recording (Hindi, Tamil, Kannada, etc.)  │
- │  - Browser MediaRecorder & Geolocation API                             │
- │  - Unique Tracking Code Display (#GR-2026-XXXX) & Live Timeline       │
- └───────────────────────────────────┬────────────────────────────────────┘
-                                     │ POST /api/complaints | POST /transcribe
-                                     ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │                  FASTAPI BACKEND GATEWAYS & ENGINES                    │
- │         (http://127.0.0.1:8000 & Standalone Whisper Service)          │
- └──────┬────────────────────────────┬─────────────────────────────┬──────┘
-        │                            │                             │
-        ▼                            ▼                             ▼
-┌──────────────┐           ┌──────────────────┐           ┌──────────────────┐
-│  AI ENGINE   │           │  SUPABASE DB     │           │ MUNICIPAL OFFICER│
-│ (Gemini /    │           │  POSTGRESQL      │           │ DASHBOARD        │
-│  Whisper /   │           │(users, complaints│           │ - Leaflet GIS    │
-│  Llama-3.1)  │           │ departments,     │           │ - Map Heatmaps   │
-└──────────────┘           │ status_logs)     │           │ - Dispatch Logs  │
-                           └──────────────────┘           └──────────────────┘
+                                  ┌───────────────────────────────┐
+                                  │       VERCEL PLATFORM         │
+                                  ├───────────────────────────────┤
+  Citizen / Official ────────────►│  ⚡ High-Speed CDN Edge       │
+  (React 19 + Vite SPA)           │  - /login (Default Landing)   │
+                                  │  - /home, /report, /track     │
+                                  │  - /dept-dashboard            │
+                                  ├───────────────────────────────┤
+                                  │  ⚡ Serverless AI Functions   │
+                                  │  - /api/analyze (Groq LLM)    │
+                                  │  - /api/transcribe (Whisper)  │
+                                  │  - /api/health                │
+                                  └──────────────┬────────────────┘
+                                                 │
+                                                 ▼
+                                  ┌───────────────────────────────┐
+                                  │     SUPABASE DATABASE         │
+                                  │  - Auth & Role Verification   │
+                                  │  - user & department profiles │
+                                  │  - complaints & timeline logs │
+                                  │  - Photo Storage Buckets      │
+                                  └───────────────────────────────┘
 ```
 
 ---
@@ -53,164 +62,128 @@ An AI-powered municipal grievance redressal system designed for Smart City civic
 
 ```
 SIH-LATEST/
-├── README.md                      # Primary project repository documentation
-├── frontend/                      # React 19 + Vite Citizen Mobile Web Application
+├── README.md                      # Primary project documentation
+├── vercel.json                    # Root Vercel build & SPA rewrite configuration
+├── VERCEL_DEPLOYMENT.md           # Step-by-step Vercel production deployment guide
+├── package.json                   # Root workspace scripts
+│
+├── api/                           # Vercel Serverless Edge Functions
+│   ├── analyze.js                 # Groq AI categorization & severity evaluation
+│   ├── transcribe.js              # Serverless Whisper audio transcription
+│   └── health.js                  # Gateway health status endpoint
+│
+├── frontend/                      # React 19 + Vite Production Application
+│   ├── api/                       # Local API copy for frontend builds
 │   ├── src/
 │   │   ├── components/            # UI components (ReportIssue, AIReview, ComplaintTracking, etc.)
-│   │   ├── context/               # React Context providers
-│   │   ├── data/                  # Static & mock data references
-│   │   ├── App.jsx                # App routes (/language, /report, /review, /track, /ask)
-│   │   └── index.css              # Global styles & theme design system
-│   ├── package.json               # Node.js dependencies & scripts
-│   └── vite.config.js             # Vite configuration
-├── frontendback/                  # Standalone FastAPI Whisper Transcriber Service
-│   └── main.py                    # Fast API server with local Whisper medium model
-└── SIH year 1/                    # Primary Full-Stack Monorepo
+│   │   │   └── auth/              # Authentication & Portal components:
+│   │   │       ├── Login.jsx          # Dual-tab Sign In (Citizen & Department)
+│   │   │       ├── SignUp.jsx         # Sign Up with role-specific profile creation
+│   │   │       ├── ForgotPassword.jsx # Recovery-code password reset
+│   │   │       ├── DeptDashboard.jsx  # Official Leaflet GIS Command Dashboard
+│   │   │       └── ProtectedRoute.jsx # Role-based route guard
+│   │   ├── context/
+│   │   │   ├── AuthContext.jsx    # Supabase session, profile, and role state
+│   │   │   └── AppContext.jsx     # Voice, complaint draft, and language context
+│   │   ├── data/                  # Multilingual dictionaries & fallback models
+│   │   ├── lib/                   # Supabase JS client configuration
+│   │   ├── App.jsx                # Application routing configuration
+│   │   └── index.css              # Custom styling & glassmorphism theme
+│   ├── package.json               # Frontend dependencies
+│   └── vite.config.js             # Vite build & proxy settings
+│
+├── frontendback/                  # Optional Standalone Python Whisper Service
+│   └── main.py                    # Local FastAPI Whisper audio transcription server
+│
+└── SIH year 1/                    # Monorepo Backend & Database Schema
     ├── server/                    # FastAPI Server Gateway
-    │   ├── main.py                # Main FastAPI entry point
-    │   ├── db.py                  # Supabase database connection & in-memory fallback
-    │   └── schemas.py             # Pydantic data schemas
-    ├── services/                  # Core Business Services
-    │   └── ai_engine.py           # Gemini API & Groq LLM transcription & classification
-    ├── apps/                      # Monorepo Web Applications
-    │   ├── citizen-portal/        # Lightweight Citizen Portal build
-    │   └── officer-dashboard/     # Officer Command Dashboard with Leaflet GIS Map
-    ├── packages/
-    │   └── database/schema.sql    # Supabase PostgreSQL DDL schema & triggers
-    └── tests/                     # Integration and End-to-End tests
-        └── test_e2e_flow.py       # E2E system flow test suite
+    ├── services/                  # AI business logic & Groq integration
+    └── packages/database/         # PostgreSQL schema DDL & triggers
 ```
 
 ---
 
-## ⚙️ Prerequisites & Setup
+## ⚙️ Environment Variables
 
-### Prerequisites
-- **Node.js**: v18+ and `npm`
-- **Python**: v3.10+ and `pip`
-- **API Keys**: Groq API Key and/or Google Gemini API Key, Supabase Credentials
+Create a `.env` file in `frontend/` (for local development) and configure environment variables in your Vercel Dashboard:
 
----
-
-## 🛠️ Installation & Running Locally
-
-### 1. Environment Configuration
-Create a `.env` file inside `SIH year 1/`:
-```bash
-cp "SIH year 1/.env.example" "SIH year 1/.env"
-```
-
-Configure your environment variables in `.env`:
 ```env
+# Supabase Configuration (Required)
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# AI Engine Configuration (Optional - has keyword fallback)
 GROQ_API_KEY=gsk_your_groq_api_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your_supabase_anon_key_here
+
+# Backend URL (Optional - leave empty to use serverless /api endpoints)
+VITE_BACKEND_URL=
 ```
 
 ---
 
-### 2. Running the Monorepo Backend API Gateway (Port 8000)
+## 🚀 Getting Started Locally
 
+### 1. Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
+
+### 2. Installation
 ```bash
-# Navigate to the monorepo directory
-cd "SIH year 1"
+# Clone the repository
+git clone https://github.com/abhishek18407-pixel/SIH-LATEST.git
+cd SIH-LATEST
 
-# Install Python dependencies
-pip install groq python-dotenv fastapi uvicorn python-multipart supabase httpx pydantic
-
-# Start the FastAPI server
-python -m uvicorn server.main:app --host 127.0.0.1 --port 8000 --reload
-```
-
----
-
-### 3. Running the React Frontend (Port 5173)
-
-```bash
-# Navigate to the frontend directory
+# Install frontend dependencies
 cd frontend
-
-# Install Node dependencies
 npm install
+```
 
-# Start Vite development server
+### 3. Run Development Server
+```bash
 npm run dev
 ```
 
-The React Citizen Mobile Application will be available at `http://localhost:5173`.
+The application will be accessible at `http://localhost:5173`.
 
 ---
 
-### 4. Running the Standalone Multilingual Whisper Backend (Port 8000)
+## 🚢 Vercel Deployment
 
-If using the local Whisper model backend for audio transcription:
+This repository is pre-configured with `vercel.json` for **1-click deployment on Vercel**:
 
-```bash
-cd frontendback
+1. Push your code to GitHub:
+   ```bash
+   git add .
+   git commit -m "Update project deployment"
+   git push origin main
+   ```
+2. Import the repository in [vercel.com/new](https://vercel.com/new).
+3. Set the Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `GROQ_API_KEY`).
+4. Click **Deploy**!
 
-# Install dependencies (requires openai-whisper and ffmpeg)
-pip install fastapi uvicorn openai-whisper python-multipart
-
-# Start local audio transcription server
-python main.py
-```
-
----
-
-### 5. Launching Officer Dashboard & Citizen Portal Static Server
-
-```bash
-# Officer Command Dashboard (Port 3001)
-python -m http.server 3001 --directory "SIH year 1/apps/officer-dashboard"
-
-# Citizen Portal (Port 3000)
-python -m http.server 3000 --directory "SIH year 1/apps/citizen-portal"
-```
+> For full deployment steps, refer to [VERCEL_DEPLOYMENT.md](file:///c:/VS%20CODE/SIH%20year%201/VERCEL_DEPLOYMENT.md).
 
 ---
 
-## 📡 Key API Endpoints
+## 🧪 Route Map & Navigation
 
-### 1. File / Submit Grievance
-- **Endpoint**: `POST /api/complaints`
-- **Content-Type**: `multipart/form-data`
-- **Payload**:
-  - `text` *(string, optional)*: Grievance description text.
-  - `audio` *(file, optional)*: Audio recording file (`.webm`, `.wav`, `.mp3`).
-  - `citizen_phone` *(string)*: Citizen contact number.
-  - `lat` / `long` *(float, optional)*: Geolocation coordinates.
-
-### 2. Local Audio Transcription & Translation
-- **Endpoint**: `POST /transcribe`
-- **Content-Type**: `multipart/form-data`
-- **Payload**:
-  - `file`: Audio recording file (`.webm`, `.mp3`).
-  - `language` *(optional)*: Target 2-letter language code (`hi`, `kn`, `ta`, `te`, `mr`, `bn`, `gu`, `pa`, `ml`, `ur`, `en`).
-
-### 3. List Complaints (Officer Dashboard Stream)
-- **Endpoint**: `GET /api/complaints`
-- **Query Params**: `department`, `urgency`, `status`
-
-### 4. Track Complaint & View Timeline
-- **Endpoint**: `GET /api/complaints/track/{tracking_id}`
-
-### 5. Update Status
-- **Endpoint**: `PATCH /api/complaints/{id}/status`
-- **Body**: `{"status": "IN_PROGRESS", "notes": "Dispatched crew to site."}`
-
----
-
-## 🧪 Testing
-
-Run system end-to-end unit and integration tests:
-```bash
-cd "SIH year 1"
-python -m unittest tests/test_e2e_flow.py
-```
+| Route | Access | Component | Purpose |
+|---|---|---|---|
+| `/` | Public | `Login` | **Default Landing**: Sign in as Citizen or Official |
+| `/login` | Public | `Login` | Dual-tab Authentication |
+| `/signup` | Public | `SignUp` | Registration with 6-char recovery code |
+| `/forgot-password` | Public | `ForgotPassword` | Recovery-code based instant password reset |
+| `/home` | Citizen | `Welcome` | Citizen overview, quick report & tracking buttons |
+| `/language` | Citizen | `LanguageSelect` | Select preferred Indian regional language |
+| `/report` | Citizen | `ReportIssue` | Voice recording, photo attachment & location capture |
+| `/review` | Citizen | `AIReview` | Review AI-classified summary & submit grievance |
+| `/registered` | Citizen | `ComplaintRegistered`| Success receipt with Tracking ID |
+| `/track` | Citizen | `ComplaintTracking` | Live grievance status timeline |
+| `/dept-dashboard` | Official | `DeptDashboard` | Municipal command center with Leaflet GIS map |
 
 ---
 
 ## 📄 License
 
-This project is created for the Smart India Hackathon (SIH) Civic Redressal Track.
+Distributed under the MIT License. Developed for the Smart India Hackathon (SIH).
